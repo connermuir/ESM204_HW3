@@ -1,0 +1,70 @@
+---
+title: "ESM 204 - Assignment 3"
+author: "Conner Smith"
+date: "5/2/2022"
+output:
+  html_document:
+   theme:
+     bg: "#002B36"
+     fg: "#EEE8D5"
+     primary: "#2AA198"
+   code_folding: hide
+   
+---
+
+```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, options(scipen = 999))
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(thematic)
+library(scales)
+library(equatiomatic)
+
+thematic::thematic_rmd()
+thematic::thematic_on()
+
+```
+
+
+## Overview
+
+```{r}
+# Read in the main data set
+
+carbon <- read_csv(here("carbon.csv")) %>% 
+  clean_names() %>% 
+  select(-x1)
+
+```
+
+
+The Biden Administration’s “interim” value is $51 per metric ton of CO2. The electricity sector is the second largest source of greenhouse gas emissions in the U.S. (after transportation). In this analysis, we consider the distributional consequences of imposing a household electricity tax based on the SCC to address the climate change problem.
+
+
+## **Analysis** {.tabset}
+
+The dataset contains the following:
+
+- Consumers can separated into two income groups: “high” and “low.” 
+- Price (in $) and quantity (in kWh) estimates of demand per month for the two groups. 
+
+This analysis will start with linear regressions (with an intercept) to estimate the demand curves for “high” and “low” income consumers under the following conditions: 
+
+- Initially, there is no tax on electricity consumption.
+- The current electricity price (without any taxes) is $.10 per kWh.
+- The marginal cost of producing a kWh of electricity is linear and has a price-intercept of 0.
+
+
+### **1. MEC**
+
+### **2. Aggregations**
+
+### **3. Consumer Benefit**
+
+### **4. Optimal Tax**
+
+### **5. Redistribution**
+
+### **6. Solar PV**
