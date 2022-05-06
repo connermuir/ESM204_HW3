@@ -59,6 +59,33 @@ This analysis will start with linear regressions (with an intercept) to estimate
 
 ### **1. MEC**
 
+Assuming that one kWh of electricity emits 0.85 pounds of CO2 and that the interim SCC of $51/ton is accurate, this section calculates the MEC per kWh.
+
+```{r}
+# Create a longer dataset where income is a variable, not a column 
+
+carbon_long <- carbon %>% 
+  pivot_longer(cols = c(q_low_kwh, q_high_kwh),
+               names_to = 'income_level',
+               values_to = 'kwh') %>% 
+  mutate(income_level = case_when(income_level == 'q_low_kwh' ~ 'low',
+                   income_level == 'q_high_kwh' ~ 'high'))
+
+# Run a simple calculation to get the MEC 
+
+interim_price_ton <- 51
+
+#2205 lbs in a metric ton. Divide Biden price by this to get price/lb
+
+interim_price_lb <- interim_price_ton/2205
+
+# Multiply by 0.85 to get MEC/kWh
+interim_price_kWh <- interim_price_lb*0.85
+
+```
+
+Based on this, the marginal externality cost per kWh of electricity is $`r round(interim_price_lb, 3)`.
+
 ### **2. Aggregations**
 
 ### **3. Consumer Benefit**
