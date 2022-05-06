@@ -88,6 +88,94 @@ Based on this, the marginal externality cost per kWh of electricity is $`r round
 
 ### **2. Aggregations**
 
+```{r}
+# Calculate aggregate demand curve for electricity
+
+# First get lm estimates from data for both low and high
+demand_low <- lm(price_cents ~ kwh, income_level=='low', 
+                 data = carbon_long) 
+extract_eq(model = demand_low, use_coefs = TRUE, coef_digits = 5)
+
+demand_high <- lm(price_cents ~ kwh, income_level=='high',
+                  data = carbon_long) 
+extract_eq(model = demand_high, use_coefs = TRUE, coef_digits = 5)
+```
+
+Given these income-based demand curves, we can sum horizontally to get the aggregate demand curve. 
+
+```{r}
+# Switch the equations above so Q is on one side and then add 
+
+demand_low_flip <- lm(kwh ~ price_cents, income_level=='low', 
+                 data = carbon_long) 
+extract_eq(model = demand_low_flip, use_coefs = TRUE, coef_digits = 5)
+
+demand_high_flip <- lm(kwh ~ price_cents, income_level=='high',
+                  data = carbon_long) 
+extract_eq(model = demand_high_flip, use_coefs = TRUE, coef_digits = 5)
+
+kwh_agg_int <- (demand_low_flip$coefficients[1]+
+                  demand_high_flip$coefficients[1])
+
+kwh_agg_slope <- (demand_low_flip$coefficients[2] +
+                    demand_high_flip$coefficients[2])
+
+demand_agg_p <- function(price_cents){kwh_agg_int +
+    kwh_agg_slope*(price_cents)}
+
+demand_agg_int <- kwh_agg_int/-kwh_agg_slope
+demand_agg_slope <- 1/kwh_agg_slope
+
+# Aggregate demand function is P = 30.5 - 0.000039Q
+
+demand_agg <- function(kwh){demand_agg_int + demand_agg_slope*kwh}
+
+```
+
+This gives us an aggregate demand of equation of *P = 30.5 - 0.000039Q*. 
+
+*Note: this gives price in cents, not dollars*
+
+Now we need to calculate the supply curve for electricity. We already know that the current price is $0.10/kWh. We also know the MC for electricity is linear with a 0 intercept. 
+
+```{r}
+
+kwh_agg <- demand_agg_p(10)
+# 522128 kWh consumed at price of $0.10
+
+supply_slope <- 10/kwh_agg
+```
+
+Since we know the supply curve will pass through the aggregate demand curve at the level of demand for a price of $0.10/kwh, we can infer that the supply curve (or marginal cost per kWh of electricity) function is: 
+
+*P = 0.0000192Q*
+
+*Note: this gives a price in cents, not dollars*
+
+From this, we can calculate consumer and producer surplus as well as environmental cost. 
+
+```{r}
+# CS needs Y intercept --> at 0 kWh, price would be $0.305
+
+# Note the conversion back to dollars 
+cs_baseline <- 0.5*kwh_agg*(0.305 - 0.10)
+# $53,518
+
+# PS easy, just go up to 10 and out to the kwh 
+ps_baseline <- 0.5*kwh_agg*0.10
+# $26,106
+
+# cost is rectangle 
+env_cost_baseline <- interim_price_kWh*kwh_agg
+# $10,265
+```
+
+- Consumer Benefit = $`r round(cs_baseline, 0)`
+- Producer Benefit = $`r round(ps_baseline, 0)`
+- Environmental Cost = $`r round(env_cost_baseline, 0)`
+
+*Note these benefits and costs are in dollars, not cents*
+
 ### **3. Consumer Benefit**
 
 ### **4. Optimal Tax**
