@@ -75,16 +75,16 @@ carbon_long <- carbon %>%
 
 interim_price_ton <- 51
 
-#2205 lbs in a metric ton. Divide Biden price by this to get price/lb
+#2205 lbs in a metric ton. Divide by 0.85 to get kwh produced per ton
 
-interim_price_lb <- interim_price_ton/2205
+kwh_ton <- 2204.6/0.85
 
-# Multiply by 0.85 to get MEC/kWh
-interim_price_kWh <- interim_price_lb*0.85
+# Multiply by Biden price to get MEC/kWh (Basically, $51 is the price for 2594 kwh)
+interim_price_kwh <- 51/kwh_ton
 
 ```
 
-Based on this, the marginal externality cost per kWh of electricity is $`r round(interim_price_lb, 3)`.
+Based on this, the marginal externality cost per kWh of electricity is $`r round(interim_price_kwh, 4)`.
 
 ### **2. Aggregations**
 
@@ -168,8 +168,8 @@ ps_baseline <- 0.5*kwh_agg*0.10
 # $26,106
 
 # cost is rectangle 
-env_cost_baseline <- interim_price_kWh*kwh_agg
-# $10,265
+env_cost_baseline <- interim_price_kwh*kwh_agg
+# $10,267
 ```
 
 - Consumer Benefit = $`r round(cs_baseline, 0)`
