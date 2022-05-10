@@ -165,7 +165,38 @@ Since we know the supply curve will pass through the aggregate demand curve at t
 
 *Note: this gives a price in cents, not dollars*
 
-From this, we can calculate consumer and producer surplus as well as environmental cost. 
+#### **Figure 1: Market for Electricity**
+```{r}
+# Visualize all fo the above curves
+
+#First make a new df with the low and high income curves, as well as the supply curve
+
+ggplot(agg_df, aes(Qagg, price)) +
+  geom_line(color = "sienna") +
+  annotate("text", x = 400000, y = 17, 
+           label = "Aggregate Demand", angle = -30) +
+  geom_abline(color = "darkolivegreen4",
+              intercept = demand_high$coefficients[1],
+              slope= demand_high$coefficients[2]) +
+  annotate("text", x = 300000, y = 15, 
+           label = "High-Income Demand", angle = -38) +
+  geom_abline(color = "slateblue",
+              intercept = demand_low$coefficients[1],
+              slope= demand_low$coefficients[2]) +
+  annotate("text", x = 150000, y = 10, 
+           label = "Low-Income Demand", angle = -55) +
+  geom_abline(color = "goldenrod",
+              intercept = 0,
+              slope= supply_slope) +
+  annotate("text", x = 300000, y = 7, 
+           label = "Supply", angle = 17) +
+  labs(x = "Electricity Consumed (kWh)",
+       y = "Price (cents/kWh)")
+  
+```
+
+
+From these curves, we can calculate consumer and producer surplus as well as environmental cost. 
 
 ```{r}
 # CS needs Y intercept --> at 0 kWh, price would be $0.305
