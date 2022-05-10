@@ -122,7 +122,7 @@ demand_agg <- function(p){
 #536,719.5 kWh consumed @ $0.10
 ```
 
-Given these income-based demand curves, we can sum horizontally to get the **aggregate demand curve:**
+Given these income-based demand curves, we can sum horizontally to get the aggregate demand curve. This does not follow a perfect line due to the kink at the top. 
 
 ```{r}
 # Make a vector and extract the lm 
@@ -133,21 +133,12 @@ Qagg <- map(price, demand_agg) %>%
 
 agg_df<- tibble(Qagg = Qagg, price = price)
 
-demand_agg_eq <- lm(price ~ Qagg, data = agg_df) 
-extract_eq(model = demand_agg_eq, use_coefs = TRUE, coef_digits = 5)
+# Note this is incorrect given the kink 
+#demand_agg_eq <- lm(price ~ Qagg, data = agg_df) 
+#extract_eq(model = demand_agg_eq, use_coefs = TRUE, coef_digits = 5)
 ```
 
 *Note: this gives price in cents, not dollars*
-
-```{r}
-# Switch the equations above so Q is on one side and then add 
-
-agg_slope <- demand_agg_eq$coefficients[2]
-agg_int <- demand_agg_eq$coefficients[1]
-
-# Aggregate demand function is P = 29.78135 - 0.00004(Qagg)
-
-```
 
 Now we need to calculate the supply curve for electricity. We already know that the current price is $0.10/kWh. We also know the MC for electricity is linear with a 0 intercept. 
 
@@ -253,7 +244,7 @@ This indicates clear disparity where consumer surplus for high income consumers 
 In earlier sections, we determined that the marginal environmental cost of carbon is $0.0197 per kWh of electricity consumed. This is also the optimal tax level. Since we are assuming this is entirely borne by low-income consumers, we will apply this tax to the low-income demand. Supply will stay the same. This will shift low-income demand down and we will recalculate the aggregate demand to get the new demand and price values (**I Don't Really Follow the wording of this at all, this interpretation could be off**)
 
 ```{r}
-# Add tax to the demand for the low-income demand (this will now be lower)
+# THIS WAS INCORRECT< DISREGARD FOR NOW 
 
 # Low income demand is 23.37097 - 0.00011kwh initially
 
@@ -311,6 +302,45 @@ tax_revenue <- interim_price_kwh*demand_low_tax(10)
 
 ```
 
+```{r}
+# Trying taking tax straight from AD (Downward shift), account for this by subtracting the tax amount from the y intercept for each low and high income. 
+
+tax_cents <- 1.97
+# Note this is in cents, this is what we subtract from the y intercept 
+
+demand_tax <- function(p, model){
+  q <- (p - (model$coefficients[[1]]-1.97))/model$coefficients[[2]]
+  q <- ifelse(q<0,0,q)
+  return(q)
+} # note, this is the same function but lowering the intercept for each
+
+
+demand_agg_tax <- function(p){
+  q <- demand_tax(p, demand_low) + demand_tax(p, demand_high)
+  return(q)
+}
+
+#Now need to calculate when AD equals the supply curve 
+
+# Supply curve -- *P = 0.0000186Q*
+Qagg_tax <- map(price, demand_agg_tax) %>% 
+  unlist()
+
+agg_df_tax<- tibble(Qagg_tax = Qagg_tax, price = price)
+
+# Note this is incorrect given the kink, but will get us the socially optimal levels since it is down the kink. 
+demand_agg_tax_eq <- lm(price ~ Qagg_tax, data = agg_df_tax)
+#extract_eq(model = demand_agg_tax_eq, use_coefs = TRUE, coef_digits = 5)
+# 28.21529 - 0.00004(Q) = .0000186Q
+#This gives Q* of 481,490 
+# At this Q*, P* will be 
+
+P_new <- 28.21529-0.00004*(481490)
+# New price is $8.96
+# Not sure this makes intuitive sense, price going down with the implementation of a tax since we are assuming AD is dropping and no supply impacts, so price should decrease technically, this is all quite misleading/opaque
+
+```
+
 **A:** The amount of electricity produced/consumed *decreases* by `r round(demand_change, 0)`kWh. The new total consumption is $`r round(demand_agg_tax, 0)`
 
 **B:** The price of electricity is assumed to stay the same if all costs are borne by low income consumers. 
@@ -327,5 +357,18 @@ The new total is $`r round(cs_low_tax, 0)`.
 **G:** The tax revenue generated is $`r round(tax_revenue, 0)`.
 
 ### **5. Redistribution**
+
+```{r}
+# Calculating different prices 
+
+# If price/ton is $75 --- 75/(2204.6/0.85) --- $0.0289/kWh
+# If price/ton is $100 --- 100/(2204.6/0.85)--- $0.0386.kWh
+# If price/ton is $125 --- 125/(2204.6/0.85) --- $0.0482/kWh
+# If price/ton is $150 --- 150/(2204.6/0.85) --- $0.0578/kWh
+
+
+
+```
+
 
 ### **6. Solar PV**
