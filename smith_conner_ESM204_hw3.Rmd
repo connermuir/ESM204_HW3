@@ -97,10 +97,6 @@ demand_low <- lm(price_cents ~ kwh, income_level=='low',
                  data = carbon_long) 
 extract_eq(model = demand_low, use_coefs = TRUE, coef_digits = 5)
 
-demand_low_f <- function(p){
-  q <- (p - demand_low$coefficients[[1]])/
-  demand_low$coefficients[[2]]
-  return(q)}
 ```
 
 **High income demand curve:**
@@ -109,65 +105,63 @@ demand_high <- lm(price_cents ~ kwh, income_level=='high',
                   data = carbon_long) 
 extract_eq(model = demand_high, use_coefs = TRUE, coef_digits = 5)
 
-demand_high_f <- function(p){
-  q <- (p - demand_high$coefficients[[1]])/
-  demand_high$coefficients[[2]]
-  return(q)}
-
-```
-
-Given these income-based demand curves, we can sum horizontally to get the **aggregate demand curve:**
-
-```{r}
-# Switch the equations above so Q is on one side and then add 
-
-demand_low_flip <- lm(kwh ~ price_cents, income_level=='low', 
-                 data = carbon_long) 
-
-demand_high_flip <- lm(kwh ~ price_cents, income_level=='high',
-                  data = carbon_long) 
-
-kwh_agg_int <- (demand_low_flip$coefficients[1]+
-                  demand_high_flip$coefficients[1])
-
-kwh_agg_slope <- (demand_low_flip$coefficients[2] +
-                    demand_high_flip$coefficients[2])
-
-demand_agg_p <- function(price_cents){kwh_agg_int +
-    kwh_agg_slope*(price_cents)}
-
-demand_agg_int <- kwh_agg_int/-kwh_agg_slope
-demand_agg_slope <- 1/kwh_agg_slope
-
-# Aggregate demand function is P = 30.5 - 0.000039Q
-
-demand_agg <- function(kwh){demand_agg_int + demand_agg_slope*kwh}
-
+# Generalized demand model from sample code 
 demand <- function(p, model){
   q <- (p - model$coefficients[[1]])/model$coefficients[[2]]
   q <- ifelse(q<0,0,q)
   return(q)
 }
 
+# Generalized aggregate demand from code sample (gives sluightly different value than manual attempt)
+demand_agg <- function(p){
+  q <- demand(p, demand_low) + demand(p, demand_high)
+  return(q)
+}
+
+#demand_agg(10)
+#536,719.5 kWh consumed @ $0.10
 ```
 
-This gives us an aggregate demand of equation of *P = 30.5 - 0.000039Q*. 
+Given these income-based demand curves, we can sum horizontally to get the **aggregate demand curve:**
+
+```{r}
+# Make a vector and extract the lm 
+price = seq(0, 30, length.out = 100)
+
+Qagg <- map(price, demand_agg) %>% 
+  unlist()
+
+agg_df<- tibble(Qagg = Qagg, price = price)
+
+demand_agg_eq <- lm(price ~ Qagg, data = agg_df) 
+extract_eq(model = demand_agg_eq, use_coefs = TRUE, coef_digits = 5)
+```
 
 *Note: this gives price in cents, not dollars*
+
+```{r}
+# Switch the equations above so Q is on one side and then add 
+
+agg_slope <- demand_agg_eq$coefficients[2]
+agg_int <- demand_agg_eq$coefficients[1]
+
+# Aggregate demand function is P = 29.78135 - 0.00004(Qagg)
+
+```
 
 Now we need to calculate the supply curve for electricity. We already know that the current price is $0.10/kWh. We also know the MC for electricity is linear with a 0 intercept. 
 
 ```{r}
 
-kwh_agg <- demand_agg_p(10)
-# 522128 kWh consumed at price of $0.10
+kwh_agg <- demand_agg(10)
+#536,719.5 kWh consumed @ $0.10
 
 supply_slope <- 10/kwh_agg
 ```
 
 Since we know the supply curve will pass through the aggregate demand curve at the level of demand for a price of $0.10/kwh, we can infer that the supply curve (or marginal cost per kWh of electricity) function is: 
 
-*P = 0.0000192Q*
+*P = 0.0000186Q*
 
 *Note: this gives a price in cents, not dollars*
 
@@ -178,15 +172,15 @@ From this, we can calculate consumer and producer surplus as well as environment
 
 # Note the conversion back to dollars 
 cs_baseline <- 0.5*kwh_agg*(0.305 - 0.10)
-# $53,518
+# $55,013.74
 
 # PS easy, just go up to 10 and out to the kwh 
 ps_baseline <- 0.5*kwh_agg*0.10
-# $26,106
+# $26,835.97
 
 # cost is rectangle 
 env_cost_baseline <- interim_price_kwh*kwh_agg
-# $10,267
+# $10,553.75
 ```
 
 - Consumer Benefit = $`r round(cs_baseline, 0)`
@@ -203,17 +197,18 @@ This comes from an aggregate demand curve that indicates 522,128 kWh will be con
 To get the surplus differential between income groups, we use the current price and calculate the amount each group will consume at this level. 
 
 ```{r}
-# low income demand function
-demand_low_f(10)
-#Low income gets 121,344 
-#demand_low$coefficients[1] --- intercepot is 23.37
-cs_low <- 0.5*(.2337 - .10)*demand_low_f(10)
+# low income demand
+# demand(10, demand_low)
+# Low income gets 121,344 
+#demand_low$coefficients[1] --- intercept is 23.37
+
+cs_low <- 0.5*(.2337 - .10)*demand(10, demand_low)
 # $8,112 CS for low income (note dollars/cents conversion)
 
-demand_high_f(10)
+#demand(10, demand_low)
 #High gets 415,376
 #demand_high$coefficients[1] --- intercept is 31.61
-cs_high <- 0.5*(.3161-.10)*demand_high_f(10)
+cs_high <- 0.5*(.3161-.10)*demand(10, demand_high)
 # $44,881.3 CS for high income 
 ```
 
@@ -223,6 +218,82 @@ This indicates clear disparity where consumer surplus for high income consumers 
 - High-income CS: $`r round(cs_high, 0)`
 
 ### **4. Optimal Tax**
+
+In earlier sections, we determined that the marginal environmental cost of carbon is $0.0197 per kWh of electricity consumed. This is also the optimal tax level. Since we are assuming this is entirely borne by low-income consumers, we will apply this tax to the low-income demand. Supply will stay the same. This will shift low-income demand down and we will recalculate the aggregate demand to get the new demand and price values (**I Don't Really Follow the wording of this at all, this interpretation could be off**)
+
+```{r}
+# Add tax to the demand for the low-income demand (this will now be lower)
+
+# Low income demand is 23.37097 - 0.00011kwh initially
+
+tax_cents <- 1.97
+# Note this is in cents
+
+low_int_tax <- demand_low$coefficients[1] - tax
+#low_int_tax
+#Tax basically lowers intercept for low income 
+
+demand_low_tax <- function(p){
+  q <- (p - low_int_tax)/
+  demand_low$coefficients[[2]]
+  return(q)}
+
+# Now we get the new AD curve, note that the high income stays the same here.
+
+demand_agg_tax <- function(p){
+  q <- demand_low_tax(p) + demand(p, demand_high)
+  return(q)
+}
+
+demand_agg_tax <- demand_agg_tax(10)
+#518,841
+
+demand_change <- kwh_agg-demand_agg_tax
+# A. Reduction in kwh consumed of 17,878
+
+# B. I don't think we are assuming anything happens to the price of electricity, only the quantity should change with the shift in demand 
+
+# C. High income surplus shouldn't change 
+
+# D. Low income surplus 
+cs_low_tax <- 0.5*(.214 - .10)*demand_low_tax(10)
+# CS for low income now $5898
+
+cs_low_change <- cs_low - cs_low_tax
+#Dropped by $2214
+
+#E. PS decreases 
+ps_tax <- 0.5*demand_agg_tax*0.10
+ps_change <- ps_baseline - ps_tax
+#$894 decrease 
+
+#F. ENV damage decreases 
+damage_tax <- interim_price_kwh*demand_agg_tax
+damage_baseline <- interim_price_kwh*kwh_agg
+damage_change <- damage_baseline - damage_tax
+#Damage goes down by $352 
+
+#G. Tax revenue 
+
+tax_revenue <- interim_price_kwh*demand_low_tax(10)
+# $2,034 tax revenue 
+
+```
+
+**A:** The amount of electricity produced/consumed *decreases* by `r round(demand_change, 0)`kWh. The new total consumption is $`r round(demand_agg_tax, 0)`
+
+**B:** The price of electricity is assumed to stay the same if all costs are borne by low income consumers. 
+
+**C:** The welfare of high-income consumers remains unchanged ($`r round(cs_high, 0)`).
+
+**D:** The welfare of low-income consumers *decreases* by $`r round(cs_low_change, 0)`. 
+The new total is $`r round(cs_low_tax, 0)`.
+
+**E:** The producer surplus *decreases* by $ `r round(ps_change, 0)`.
+
+**F:** The environmental damage *decreases* by $`r round(damage_change, 0)`.
+
+**G:** The tax revenue generated is $`r round(tax_revenue, 0)`.
 
 ### **5. Redistribution**
 
