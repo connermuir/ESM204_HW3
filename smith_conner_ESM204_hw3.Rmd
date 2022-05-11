@@ -400,7 +400,7 @@ The new price is $`r p_new`/kWh.
 
 **C:** The welfare of high-income *decreases* by $`r round(welfare_high_change, 0)`. This includes the cost of taxes paid by these consumers.
 
-**D:** The welfare of low-income consumers *decreases* by $`r round(welfare_low_change, 0)`. *Note: welfare was already negative for low-income consumers if we assume they bear the full enviuronmental cost associated with electricity production.*
+**D:** The welfare of low-income consumers *decreases* by $`r round(welfare_low_change, 0)`. *Note: welfare was already negative for low-income consumers if we assume they bear the full environmental cost associated with electricity production.*
 
 **E:** The producer surplus *decreases* by $ `r round(ps_change, 0)`.
 
@@ -418,8 +418,53 @@ The new price is $`r p_new`/kWh.
 # If price/ton is $125 --- 125/(2204.6/0.85) --- $0.0482/kWh
 # If price/ton is $150 --- 150/(2204.6/0.85) --- $0.0578/kWh
 
+price_c_75 <- 2.89
+price_c_100 <- 3.86
+price_c_125 <- 4.82
+price_c_150 <- 5.78
+
+# pre-tax consumption 
+
+low_share <- demand(10, demand_low)/kwh_agg
+#22.61%
+high_share <- demand(10, demand_high)/kwh_agg
+#77.39%
+
+# @ $51 (the original SCC):
+
+low_redist_51 <- low_share*tax_revenue
+#Get $2224 back
+low_welfare_51 <- low_redist_51 + welfare_low_tax
+#New welfare is equal to initial welfare --- (-$2422)
+
+high_redist_51 <- high_share*tax_revenue
+# Get $7612 back 
+high_welfare_51 <- high_redist_51 + welfare_high_tax
+
+```
+
+At $51 SCC with redistribution based on pre-tax consumption share: 
+
+**A:** High-income welfare *increases* by $`r round(high_redist_51, 0)`.
+
+**B:** Low-income welfare *increases* by $`r round(low_redist_51, 0)`. *Note: low-income welfare is still negative.*
+
+**C:** Producer welfare is unchanged ($`r round(ps_tax, 0)`).
+
+```{r}
+###### Welfare @ $75
 
 
+```
+
+
+```{r}
+###### Welfare @ $100
+```
+
+
+```{r}
+###### Welfare @ $125
 ```
 
 
