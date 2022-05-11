@@ -249,65 +249,6 @@ This indicates clear disparity where consumer surplus for high income consumers 
 In earlier sections, we determined that the marginal environmental cost of carbon is $0.0197 per kWh of electricity consumed. This is also the optimal tax level. Since we are assuming this is entirely borne by low-income consumers, we will apply this tax to the low-income demand. Supply will stay the same. This will shift low-income demand down and we will recalculate the aggregate demand to get the new demand and price values (**I Don't Really Follow the wording of this at all, this interpretation could be off**)
 
 ```{r}
-# THIS WAS INCORRECT< DISREGARD FOR NOW 
-
-# Low income demand is 23.37097 - 0.00011kwh initially
-
-tax_cents <- 1.97
-# Note this is in cents
-
-low_int_tax <- demand_low$coefficients[1] - tax
-#low_int_tax
-#Tax basically lowers intercept for low income 
-
-demand_low_tax <- function(p){
-  q <- (p - low_int_tax)/
-  demand_low$coefficients[[2]]
-  return(q)}
-
-# Now we get the new AD curve, note that the high income stays the same here.
-
-demand_agg_tax <- function(p){
-  q <- demand_low_tax(p) + demand(p, demand_high)
-  return(q)
-}
-
-demand_agg_tax <- demand_agg_tax(10)
-#518,841
-
-demand_change <- kwh_agg-demand_agg_tax
-# A. Reduction in kwh consumed of 17,878
-
-# B. I don't think we are assuming anything happens to the price of electricity, only the quantity should change with the shift in demand 
-
-# C. High income surplus shouldn't change 
-
-# D. Low income surplus 
-cs_low_tax <- 0.5*(.214 - .10)*demand_low_tax(10)
-# CS for low income now $5898
-
-cs_low_change <- cs_low - cs_low_tax
-#Dropped by $2214
-
-#E. PS decreases 
-ps_tax <- 0.5*demand_agg_tax*0.10
-ps_change <- ps_baseline - ps_tax
-#$894 decrease 
-
-#F. ENV damage decreases 
-damage_tax <- interim_price_kwh*demand_agg_tax
-damage_baseline <- interim_price_kwh*kwh_agg
-damage_change <- damage_baseline - damage_tax
-#Damage goes down by $352 
-
-#G. Tax revenue 
-
-tax_revenue <- interim_price_kwh*demand_low_tax(10)
-# $2,034 tax revenue 
-
-```
-
-```{r}
 # Trying taking tax straight from AD (Downward shift), account for this by subtracting the tax amount from the y intercept for each low and high income. 
 
 tax_cents <- 1.97
@@ -356,9 +297,12 @@ price_change <- 10 - p_new
 #subtract tax amount from initial intercept, be careful of cents to dollars. 
 demand_high_tax <- demand_tax(p_new, demand_high)
 
-welfare_high_tax <- (0.5 * (.3161 - 0.0197 - 0.0932) * demand_high_tax) - (demand_high_tax * 0.0197)
+cs_high_tax <- (0.5 * (demand_high$coefficients[1]-tax_cents-p_new) * demand_high_tax)/100
+
+#welfare is CS - tax expense 
+welfare_high_tax <- cs_high_tax - (demand_high_tax * 0.0197)
   
-# "Welfare" for high income intiially is same as CS since there is no externality/tax for them. 
+# "Welfare" for high income initially is same as CS since there is no externality/tax for them. 
 welfare_high_change <- cs_high - welfare_high_tax
 # High income welfare drops by $12,893
 
@@ -366,14 +310,16 @@ welfare_high_change <- cs_high - welfare_high_tax
 
 welfare_low_baseline <- cs_low - env_cost_baseline
 
-demand_low_tax <- demand(p_new, demand_low)
+demand_low_tax <- demand_tax(p_new, demand_low)
 #Below is the total env cost at the new level of consumption
 env_cost_tax <- interim_price_kwh * q_new
 
-welfare_low_tax <- (0.5 * (.2337 - 0.0197 - 0.0932) * demand_low_tax) - (demand_low_tax * 0.0197) - env_cost_tax
+cs_low_tax <- (0.5 * (demand_low$coefficients[1]-tax_cents-p_new) * demand_low_tax)/100
+
+welfare_low_tax <- cs_low_tax - (demand_low_tax * 0.0197) - env_cost_tax
 
 welfare_low_change <- welfare_low_baseline - welfare_low_tax
-# Dropped by $2,204
+
 
 #E. PS decreases 
 ps_tax <- 0.5*q_new*0.0932
@@ -418,10 +364,13 @@ The new price is $`r p_new`/kWh.
 # If price/ton is $125 --- 125/(2204.6/0.85) --- $0.0482/kWh
 # If price/ton is $150 --- 150/(2204.6/0.85) --- $0.0578/kWh
 
-price_c_75 <- 2.89
-price_c_100 <- 3.86
-price_c_125 <- 4.82
-price_c_150 <- 5.78
+tax_75 <- 2.89
+tax_100 <- 3.86
+tax_125 <- 4.82
+tax_150 <- 5.78
+
+# Should create a vector of this 
+scc_list <- c(2.89, 3.86, 4.82, 5.78)
 
 # pre-tax consumption 
 
@@ -443,29 +392,177 @@ high_welfare_51 <- high_redist_51 + welfare_high_tax
 
 ```
 
-At $51 SCC with redistribution based on pre-tax consumption share: 
+The following are the high-income welfare, low-income welfare, and producer surplus at five SCC levels:
 
-**A:** High-income welfare *increases* by $`r round(high_redist_51, 0)`.
+**A: High-income welfare** 
 
-**B:** Low-income welfare *increases* by $`r round(low_redist_51, 0)`. *Note: low-income welfare is still negative.*
+- SCC of 51 USD/ton: $`r round(high_welfare_51, 0)`. 
+- SCC of 75 USD/ton: $`r round(welfare_high_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(welfare_high_100, 0)`.
+- SCC of 125 USD/ton: $`r round(welfare_high_125, 0)`.
+- SCC of 150 USD/ton: $`r round(welfare_high_150, 0)`.
 
-**C:** Producer welfare is unchanged ($`r round(ps_tax, 0)`).
+*Note: High income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(high_share, 2)*100`%).
+
+**B: Low-income welfare** 
+
+- SCC of 51 USD/ton: $`r round(low_welfare_51, 0)`. 
+- SCC of 75 USD/ton: $`r round(welfare_low_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(welfare_low_100, 0)`.
+- SCC of 125 USD/ton: $`r round(welfare_low_125, 0)`.
+- SCC of 150 USD/ton: $`r round(welfare_low_150, 0)`.
+
+*Note: Low income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus, the entire environmental cost is deducted, and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(low_share, 2)*100`%).
+
+**C: Producer Welfare**
+
+- SCC of 51 USD/ton: $`r round(ps_tax, 0)`. 
+- SCC of 75 USD/ton: $`r round(ps_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(ps_100, 0)`.
+- SCC of 125 USD/ton: $`r round(ps_125, 0)`.
+- SCC of 150 USD/ton: $`r round(ps_150, 0)`.
+
+*Note: Producer surplus decreases as SCC increases due to declining quantities consumed.* 
 
 ```{r}
 ###### Welfare @ $75
 
+
+#First get AD @ $75
+demand_scc <- function(p, model, scc){
+  q <- (p - (model$coefficients[[1]] - scc_list[scc]))/model$coefficients[[2]]
+  q <- ifelse(q<0,0,q)
+  return(q)
+} 
+
+
+demand_agg_75 <- function(p){
+  q <- demand_scc(p, demand_low, 1) + demand_scc(p, demand_high, 1)
+  return(q)
+}
+
+
+p_75 <- uniroot(function(p)
+  demand_agg_75(p) - supply(p),
+  interval = c(0,20))
+#Gives new P of 9.002
+
+demand_75 <- demand_agg_75(p_75$root)
+
+revenue_damage_75 <- demand_75*.0289
+
+#Low Income @ $75
+demand_low_75 <- demand_scc(p_75$root, demand_low, 1)
+cs_low_75 <- (0.5*demand_low_75*(demand_low$coefficients[1]-tax_75-p_75$root))/100
+# Welfare is CS - tax + money back 
+welfare_low_75 <- cs_low_75 - (demand_low_75 * .0289) - revenue_damage_75 + low_share*revenue_damage_75
+              
+
+# High Income @$75
+demand_high_75 <- demand_scc(p_75$root, demand_high, 1)
+cs_high_75 <- (0.5*demand_high_75*(demand_high$coefficients[1]-tax_75-p_75$root))/100
+welfare_high_75 <- cs_high_75 - (demand_high_75*0.0289) + high_share*revenue_damage_75 
+
+# Producer @ $75
+ps_75 <- 0.5*demand_75*(p_75$root/100)
 
 ```
 
 
 ```{r}
 ###### Welfare @ $100
-```
 
+#First get AD @ $75
+
+demand_agg_100 <- function(p){
+  q <- demand_scc(p, demand_low, 2) + demand_scc(p, demand_high, 2)
+  return(q)
+}
+
+p_100 <- uniroot(function(p)
+  demand_agg_100(p) - supply(p),
+  interval = c(0,20))
+#Gives new P of 8.667
+
+demand_100 <- demand_agg_100(p_100$root)
+
+revenue_damage_100 <- demand_100*.0386
+
+#Low Income @ $100
+demand_low_100 <- demand_scc(p_100$root, demand_low, 2)
+cs_low_100 <- (0.5*demand_low_100*(demand_low$coefficients[1]-tax_100-p_100$root))/100
+welfare_low_100 <- cs_low_100 - (demand_low_100*0.0386) - revenue_damage_100 + low_share*revenue_damage_100
+              
+
+# High Income @$100
+demand_high_100 <- demand_scc(p_100$root, demand_high, 2)
+cs_high_100 <- (0.5*demand_high_100*(demand_high$coefficients[1]-tax_100-p_100$root))/100
+welfare_high_100 <- cs_high_100 - (demand_high_100*0.0386) + high_share*revenue_damage_100
+
+# Producer @ $100
+ps_100 <- 0.5*demand_100*(p_100$root/100)
+```
 
 ```{r}
 ###### Welfare @ $125
+
+demand_agg_125 <- function(p){
+  q <- demand_scc(p, demand_low, 3) + demand_scc(p, demand_high, 3)
+  return(q)
+}
+
+p_125 <- uniroot(function(p)
+  demand_agg_125(p) - supply(p),
+  interval = c(0,20))
+#Gives new P of 8.336
+
+demand_125 <- demand_agg_125(p_125$root)
+revenue_damage_125 <- demand_125*.0482
+
+#Low Income @ $125
+demand_low_125 <- demand_scc(p_125$root, demand_low, 3)
+cs_low_125 <- (0.5*demand_low_125*(demand_low$coefficients[1]-tax_125-p_125$root))/100
+welfare_low_125 <- cs_low_125 - (demand_low_125*0.0482) - revenue_damage_125 + low_share*revenue_damage_125
+              
+
+# High Income @$125
+demand_high_125 <- demand_scc(p_125$root, demand_high, 3)
+cs_high_125 <- (0.5*demand_high_125*(demand_high$coefficients[1]-tax_125-p_125$root))/100
+welfare_high_125 <- cs_high_125 - (demand_high_125*0.0482) + high_share*revenue_damage_125
+
+# Producer @ $125
+ps_125 <- 0.5*demand_125*(p_125$root/100)
 ```
 
+```{r}
+###### Welfare @ $150
+
+demand_agg_150 <- function(p){
+  q <- demand_scc(p, demand_low, 4) + demand_scc(p, demand_high, 4)
+  return(q)
+}
+
+p_150 <- uniroot(function(p)
+  demand_agg_150(p) - supply(p),
+  interval = c(0,20))
+# New P of $8.0045, but actual price paid is P + tax 
+
+demand_150 <- demand_agg_150(p_150$root)
+revenue_damage_150 <- demand_150*.0578
+
+# Low income @$150
+demand_low_150 <- demand_scc(p_150$root, demand_low, 4)
+cs_low_150 <- (0.5*demand_low_150*(demand_low$coefficients[1]-tax_150-p_150$root))/100
+welfare_low_150 <- cs_low_150 - (demand_low_150*0.0578) - revenue_damage_150 + low_share*revenue_damage_150
+              
+
+# High Income @$150
+demand_high_150 <- demand_scc(p_150$root, demand_high, 4)
+cs_high_150 <- (0.5*demand_high_150*(demand_high$coefficients[1]-tax_150-p_150$root))/100
+welfare_high_150 <- cs_high_150 - (demand_high_150*0.0578) + high_share*revenue_damage_150
+
+# Producer @ $100
+ps_150 <- 0.5*demand_150*(p_150$root/100)
+```
 
 ### **6. Solar PV**
