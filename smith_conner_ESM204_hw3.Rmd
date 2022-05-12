@@ -268,9 +268,9 @@ demand_agg_tax <- function(p){
 
 #Now need to calculate when AD equals the supply curve, use the uniroot function setting AD and supply equal 
 
-uniroot(function(p)
-  demand_agg_tax(p) - supply(p),
-  interval = c(0,20))
+#uniroot(function(p)
+  #demand_agg_tax(p) - supply(p),
+  #interval = c(0,20))
 
 # This gives a price of $9.32
 
@@ -394,36 +394,6 @@ high_welfare_51 <- high_redist_51 + welfare_high_tax
 
 The following are the high-income welfare, low-income welfare, and producer surplus at five SCC levels:
 
-**A: High-income welfare** 
-
-- SCC of 51 USD/ton: $`r round(high_welfare_51, 0)`. 
-- SCC of 75 USD/ton: $`r round(welfare_high_75, 0)`. 
-- SCC of 100 USD/ton: $`r round(welfare_high_100, 0)`.
-- SCC of 125 USD/ton: $`r round(welfare_high_125, 0)`.
-- SCC of 150 USD/ton: $`r round(welfare_high_150, 0)`.
-
-*Note: High income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(high_share, 2)*100`%).
-
-**B: Low-income welfare** 
-
-- SCC of 51 USD/ton: $`r round(low_welfare_51, 0)`. 
-- SCC of 75 USD/ton: $`r round(welfare_low_75, 0)`. 
-- SCC of 100 USD/ton: $`r round(welfare_low_100, 0)`.
-- SCC of 125 USD/ton: $`r round(welfare_low_125, 0)`.
-- SCC of 150 USD/ton: $`r round(welfare_low_150, 0)`.
-
-*Note: Low income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus, the entire environmental cost is deducted, and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(low_share, 2)*100`%).
-
-**C: Producer Welfare**
-
-- SCC of 51 USD/ton: $`r round(ps_tax, 0)`. 
-- SCC of 75 USD/ton: $`r round(ps_75, 0)`. 
-- SCC of 100 USD/ton: $`r round(ps_100, 0)`.
-- SCC of 125 USD/ton: $`r round(ps_125, 0)`.
-- SCC of 150 USD/ton: $`r round(ps_150, 0)`.
-
-*Note: Producer surplus decreases as SCC increases due to declining quantities consumed.* 
-
 ```{r}
 ###### Welfare @ $75
 
@@ -461,8 +431,8 @@ welfare_low_75 <- cs_low_75 - (demand_low_75 * .0289) - revenue_damage_75 + low_
 # High Income @$75
 demand_high_75 <- demand_scc(p_75$root, demand_high, 1)
 cs_high_75 <- (0.5*demand_high_75*(demand_high$coefficients[1]-tax_75-p_75$root))/100
-welfare_high_75 <- cs_high_75 - (demand_high_75*0.0289) + high_share*revenue_damage_75 
 
+welfare_high_75 <- cs_high_75 - (demand_high_75*0.0289) + high_share*revenue_damage_75
 # Producer @ $75
 ps_75 <- 0.5*demand_75*(p_75$root/100)
 
@@ -565,4 +535,84 @@ welfare_high_150 <- cs_high_150 - (demand_high_150*0.0578) + high_share*revenue_
 ps_150 <- 0.5*demand_150*(p_150$root/100)
 ```
 
+**A: High-income welfare** 
+
+- SCC of 51 USD/ton: $`r round(high_welfare_51, 0)`. 
+- SCC of 75 USD/ton: $`r round(welfare_high_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(welfare_high_100, 0)`.
+- SCC of 125 USD/ton: $`r round(welfare_high_125, 0)`.
+- SCC of 150 USD/ton: $`r round(welfare_high_150, 0)`.
+
+*Note: High income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(high_share, 2)*100`%).
+
+**B: Low-income welfare** 
+
+- SCC of 51 USD/ton: $`r round(low_welfare_51, 0)`. 
+- SCC of 75 USD/ton: $`r round(welfare_low_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(welfare_low_100, 0)`.
+- SCC of 125 USD/ton: $`r round(welfare_low_125, 0)`.
+- SCC of 150 USD/ton: $`r round(welfare_low_150, 0)`.
+
+*Note: Low income welfare decreases with increasing SCC levels assuming taxes are deducted from consumer surplus, the entire environmental cost is deducted, and the redistribution is added based on their pre-tax share of electricity consumption* (`r round(low_share, 2)*100`%).
+
+**C: Producer Welfare**
+
+- SCC of 51 USD/ton: $`r round(ps_tax, 0)`. 
+- SCC of 75 USD/ton: $`r round(ps_75, 0)`. 
+- SCC of 100 USD/ton: $`r round(ps_100, 0)`.
+- SCC of 125 USD/ton: $`r round(ps_125, 0)`.
+- SCC of 150 USD/ton: $`r round(ps_150, 0)`.
+
+*Note: Producer surplus decreases as SCC increases due to declining quantities consumed.* 
+
+
 ### **6. Solar PV**
+
+What happens when the high-income demand curve is reduced by half? 
+
+```{r}
+# New high-income demand 
+
+demand_high_solar <- function(p){
+  q <- (p - (demand_high$coefficients[[1]]-1.97)/2)/demand_high$coefficients[[2]]
+  q <- ifelse(q<0,0,q)
+  return(q)
+}
+
+#Low income demand, again 
+demand_low_solar <- function(p){
+  q <- (p - (demand_low$coefficients[[1]]-1.97))/demand_low$coefficients[[2]]
+  q <- ifelse(q<0,0,q)
+  return(q)
+}
+
+demand_agg_solar <- function(p){
+  q <- demand_high_solar(p) + demand_low_solar(p)
+  return(q)
+}
+
+p_solar <- uniroot(function(p)
+  demand_agg_solar(p) - supply(p),
+        interval = c(0,20))
+
+price_solar <- p_solar$root
+# New price is 5.845
+
+demand_solar <- demand_agg_solar(price_solar)
+#313691 is new demand 
+
+env_cost_solar <- demand_solar*0.0197
+
+# Need SCC equation when it is equal to solar equation in terms of damage 
+
+tax_final <- (.0197/(env_cost_solar/env_cost_tax))
+
+```
+
+**A:** Total electricity consumption with solar is `r round(demand_solar, 0)` kWh. 
+
+**B:** Total environmental cost is $`r round(env_cost_solar, 0)`.
+
+**C:** The tax to make the environmental damage associated with the 51 USD SCC and no solar equal to the environmental damage with solar would be $`r round(tax_final, 4)`.
+
+*Note: this is roughly double the tax initially set based on the MEC at an SCC of $51*
