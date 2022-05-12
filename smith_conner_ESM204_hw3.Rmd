@@ -1,6 +1,6 @@
 ---
 title: "ESM 204 - Assignment 3"
-author: "Conner Smith"
+author: "Conner Smith and Russel Fager"
 date: "5/2/2022"
 output:
   html_document:
@@ -339,7 +339,7 @@ tax_revenue <- interim_price_kwh*q_new
 ```
 
 
-**A:** The amount of electricity produced/consumed *decreases* by `r round(demand_change, 0)`kWh. The new total consumption is `r round(q_new, 0)`
+**A:** The amount of electricity produced/consumed *decreases* by `r round(demand_change, 0)`kWh. The new total consumption is `r round(q_new, 0)` kWh. 
 
 **B:** The price of electricity *decreases* by $`r round(price_change, 2)`. 
 The new price is $`r p_new`/kWh. 
@@ -603,9 +603,12 @@ demand_solar <- demand_agg_solar(price_solar)
 
 env_cost_solar <- demand_solar*0.0197
 
-# Need SCC equation when it is equal to solar equation in terms of damage 
+# Need to find point on original AD where Q  is equal to solar equation Q 
 
-tax_final <- (.0197/(env_cost_solar/env_cost_tax))
+#demand_agg(17.88)
+#The tax is the difference between the point on the AD curve and on the supply curve 
+#17.88-5.845
+tax_final <- 12.035
 
 ```
 
@@ -613,6 +616,6 @@ tax_final <- (.0197/(env_cost_solar/env_cost_tax))
 
 **B:** Total environmental cost is $`r round(env_cost_solar, 0)`.
 
-**C:** The tax to make the environmental damage associated with the 51 USD SCC and no solar equal to the environmental damage with solar would be $`r round(tax_final, 4)`.
+**C:** The tax to make the environmental damage associated with the 51 USD SCC and no solar equal to the environmental damage with solar would be $`r round(tax_final, 3)/100`.
 
-*Note: this is roughly double the tax initially set based on the MEC at an SCC of $51*
+*Note: this is an exorbitantly high tax and shows the benefit of reducing the carbon intensity of energy generation sources.* 

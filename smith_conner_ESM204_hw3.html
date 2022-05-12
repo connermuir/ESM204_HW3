@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Conner Smith" />
+<meta name="author" content="Conner Smith and Russel Fager" />
 
 
 <title>ESM 204 - Assignment 3</title>
@@ -169,7 +169,7 @@ pre code {
 
 
 <h1 class="title toc-ignore">ESM 204 - Assignment 3</h1>
-<h4 class="author">Conner Smith</h4>
+<h4 class="author">Conner Smith and Russel Fager</h4>
 <h4 class="date">5/2/2022</h4>
 
 </div>
@@ -448,7 +448,7 @@ damage_change &lt;- env_cost_baseline - env_cost_tax
 
 tax_revenue &lt;- interim_price_kwh*q_new
 # $9,835 tax revenue (this is exactly the same as the env cost)</code></pre>
-<p><strong>A:</strong> The amount of electricity produced/consumed <em>decreases</em> by 36506kWh. The new total consumption is 500213</p>
+<p><strong>A:</strong> The amount of electricity produced/consumed <em>decreases</em> by 36506kWh. The new total consumption is 500213 kWh.</p>
 <p><strong>B:</strong> The price of electricity <em>decreases</em> by $0.68. The new price is $9.32/kWh.</p>
 <p><strong>C:</strong> The welfare of high-income <em>decreases</em> by $12899. This includes the cost of taxes paid by these consumers.</p>
 <p><strong>D:</strong> The welfare of low-income consumers <em>decreases</em> by $2931. <em>Note: welfare was already negative for low-income consumers if we assume they bear the full environmental cost associated with electricity production.</em></p>
@@ -681,13 +681,16 @@ demand_solar &lt;- demand_agg_solar(price_solar)
 
 env_cost_solar &lt;- demand_solar*0.0197
 
-# Need SCC equation when it is equal to solar equation in terms of damage 
+# Need to find point on original AD where Q  is equal to solar equation Q 
 
-tax_final &lt;- (.0197/(env_cost_solar/env_cost_tax))</code></pre>
+#demand_agg(17.88)
+#The tax is the difference between the point on the AD curve and on the supply curve 
+#17.88-5.845
+tax_final &lt;- 12.035</code></pre>
 <p><strong>A:</strong> Total electricity consumption with solar is 313692 kWh.</p>
 <p><strong>B:</strong> Total environmental cost is $6180.</p>
-<p><strong>C:</strong> The tax to make the environmental damage associated with the 51 USD SCC and no solar equal to the environmental damage with solar would be $0.0314.</p>
-<p><em>Note: this is roughly double the tax initially set based on the MEC at an SCC of $51</em></p>
+<p><strong>C:</strong> The tax to make the environmental damage associated with the 51 USD SCC and no solar equal to the environmental damage with solar would be $0.12035.</p>
+<p><em>Note: this is an exorbitantly high tax and shows the benefit of reducing the carbon intensity of energy generation sources.</em></p>
 </div>
 </div>
 
